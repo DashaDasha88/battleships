@@ -53,7 +53,7 @@ const carrier = new Ship('carrier', 5);
 const ships = [destroyer, submarine, cruiser, battleship, carrier];
 let notDropped;
 
-function handleValidity(){
+function getValidity(allBoardBlocks, isHorizontal, startIndex, ship){
     //manipulating it to be in the last possible available square
     let validStart = isHorizontal ? startIndex <= width * width - ship.length ? startIndex : width * width - ship.length :
     // handle vertical
@@ -91,7 +91,9 @@ function addShipPiece(user, ship, startId) {
     let isHorizontal = user === 'player' ? angle === 0 : randomBoolean;
     let randomStartIndex = Math.floor(Math.random() * width * width);
 
-    let startIndex = startId ? startId : randomStartIndex
+    let startIndex = startId ? startId : randomStartIndex;
+
+    const { shipBlocks, valid, notTaken } = getValidity(allBoardBlocks, isHorizontal, startIndex, ship);
 
     if (valid && notTaken) {
         shipBlocks.forEach(shipBlock => {
@@ -99,7 +101,7 @@ function addShipPiece(user, ship, startId) {
             shipBlock.classList.add('taken');
         })
     } else {
-        if (user === 'computer') addShipPiece(ship);
+        if (user === 'computer') addShipPiece('computer', ship);
         if (user === 'player') notDropped = true;
     }
 }
@@ -124,10 +126,14 @@ function dragStart(e) {
 
 function dragOver(e) {
     e.preventDefault();
+    const ship = ships[draggedShip.id]
+    highlightArea(e.target.id, ship);
 }
 
 function dropShip(e) {
+    //where are we dropping it? what block?
     const startId = e.target.id;
+    //get the ID of where the ship is at
     const ship = ships[draggedShip.id];
     addShipPiece('player', ship, startId);
     if (!notDropped) {
@@ -139,4 +145,13 @@ function dropShip(e) {
 function highlightArea(startIndex, ship) {
     const allBoardBlocks = document.querySelectorAll('#player div');
     let isHorizontal = angle === 0;
+
+    const { shipBlocks, valid, notTaken } = getValidity(allBoardBlocks, isHorizontal, startIndex, ship);
+
+    if(valid && notTaken) {
+        shipBlocks.forEach(shipBlock => {
+            shipBlock.classList.add('hover')
+            setTimeout(() => shipBlock.classList.remove('hover'), 500)
+        })
+    }
 }
